@@ -29,7 +29,7 @@
     <p style="font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.14em;color:#2b4130;text-transform:uppercase;margin:0 0 6px;">CONANP · FAO · Observación de la Tierra e Inteligencia Ambiental</p>
     <h1 style="font-family:'Special Elite', monospace;font-size:clamp(24px,4.6vw,34px);margin:0 0 6px;letter-spacing:.01em;line-height:1.15;">SIMSAT — Diario de aprendizaje y seguimiento</h1>
     <p style="color:#565b4d;font-size:14px;max-width:60ch;margin:0 0 6px;">Bitácora del escalamiento: piloto Laguna de Términos → cobertura de las 232 Áreas Naturales Protegidas.</p>
-    <p style="color:#7d7a6c;font-size:11.5px;font-family:'JetBrains Mono',monospace;margin:0 0 18px;">Guardado local automático · usa "Exportar respaldo" para llevar tus datos a otro dispositivo o navegador.{{ lastSavedLabel }}</p>
+    <p style="color:#7d7a6c;font-size:11.5px;font-family:'JetBrains Mono',monospace;margin:0 0 18px;">{{ headerSaveLabel }}{{ lastSavedLabel }}</p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;">
       <div style="border:2px solid #2b4130;color:#2b4130;padding:8px 12px;font-family:'JetBrains Mono', monospace;font-size:11.5px;transform:rotate(-1.4deg);background:rgba(60,89,64,0.06);min-width:118px;">cobertura ANP<b style="display:block;font-size:19px;margin-top:2px;">{{ coverageLabel }}</b></div>
       <div style="border:2px solid #33637d;color:#33637d;padding:8px 12px;font-family:'JetBrains Mono', monospace;font-size:11.5px;transform:rotate(1deg);background:rgba(51,99,125,0.06);min-width:118px;">fase actual<b style="display:block;font-size:13px;margin-top:2px;">{{ activePhaseName }}</b></div>
@@ -802,6 +802,9 @@ class Component extends DCLogic {
       coverageLabel: integradaCount+"/"+TOTAL_ANP,
       activePhaseName: activePhase ? activePhase.name : "—",
       activeTaskCount, overdueTaskCount,
+      headerSaveLabel: s.syncConnected
+        ? "Guardado local automático · sincronizado con Supabase entre tus dispositivos."
+        : "Guardado local automático · conecta la sincronización abajo (o usa \"Exportar respaldo\") para llevar tus datos a otro dispositivo.",
       lastSavedLabel: s.lastSaved ? (" · último guardado " + new Date(s.lastSaved).toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'})) : "",
       phases, togglePhase:this.togglePhase, phaseDraftNotes:s.phaseDraftNotes, phaseDraftStatus:s.phaseDraftStatus,
       setPhaseDraftNotes:this.setPhaseDraftNotes, setPhaseDraftStatus:this.setPhaseDraftStatus, savePhase:this.savePhase,
