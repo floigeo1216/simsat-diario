@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    html,body{margin:0;padding:0;}
+    body{ background:#e7e2d1; }
+    * { box-sizing:border-box; }
+    a{ color:#33637d; }
+    a:hover{ color:#2b4130; }
+  </style>
+</helmet>
+
+<div style="background:#e7e2d1;background-image:linear-gradient(#c7c0aa 1px, transparent 1px), linear-gradient(90deg, #c7c0aa 1px, transparent 1px);background-size:34px 34px;min-height:100vh;font-family:'Source Sans 3', sans-serif;color:#242a20;">
+<div style="max-width:920px;margin:0 auto;padding:28px 18px 90px;" data-screen-label="SIMSAT">
+
+  <!-- COVER -->
+  <div style="background:#dcd6c2;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:26px 24px 22px;position:relative;margin-bottom:22px;">
+    <div style="position:absolute;inset:8px;border:1px dashed #565b4d;pointer-events:none;opacity:.5;"></div>
+    <p style="font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.14em;color:#2b4130;text-transform:uppercase;margin:0 0 6px;">CONANP · FAO · Observación de la Tierra e Inteligencia Ambiental</p>
+    <h1 style="font-family:'Special Elite', monospace;font-size:clamp(24px,4.6vw,34px);margin:0 0 6px;letter-spacing:.01em;line-height:1.15;">SIMSAT — Diario de aprendizaje y seguimiento</h1>
+    <p style="color:#565b4d;font-size:14px;max-width:60ch;margin:0 0 6px;">Bitácora del escalamiento: piloto Laguna de Términos → cobertura de las 232 Áreas Naturales Protegidas.</p>
+    <p style="color:#7d7a6c;font-size:11.5px;font-family:'JetBrains Mono',monospace;margin:0 0 18px;">Guardado local automático · usa "Exportar respaldo" para llevar tus datos a otro dispositivo o navegador.{{ lastSavedLabel }}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+      <div style="border:2px solid #2b4130;color:#2b4130;padding:8px 12px;font-family:'JetBrains Mono', monospace;font-size:11.5px;transform:rotate(-1.4deg);background:rgba(60,89,64,0.06);min-width:118px;">cobertura ANP<b style="display:block;font-size:19px;margin-top:2px;">{{ coverageLabel }}</b></div>
+      <div style="border:2px solid #33637d;color:#33637d;padding:8px 12px;font-family:'JetBrains Mono', monospace;font-size:11.5px;transform:rotate(1deg);background:rgba(51,99,125,0.06);min-width:118px;">fase actual<b style="display:block;font-size:13px;margin-top:2px;">{{ activePhaseName }}</b></div>
+      <div style="border:2px solid #8a651f;color:#8a651f;padding:8px 12px;font-family:'JetBrains Mono', monospace;font-size:11.5px;transform:rotate(-0.6deg);background:rgba(185,134,44,0.08);min-width:118px;">tareas activas<b style="display:block;font-size:19px;margin-top:2px;">{{ activeTaskCount }}</b></div>
+      <div style="border:2px solid #a24a3a;color:#a24a3a;padding:8px 12px;font-family:'JetBrains Mono', monospace;font-size:11.5px;transform:rotate(0.9deg);background:rgba(162,74,58,0.06);min-width:118px;">tareas vencidas<b style="display:block;font-size:19px;margin-top:2px;">{{ overdueTaskCount }}</b></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+    <button type="button" onClick="{{ goFases }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleFases }}">Fases</button>
+    <button type="button" onClick="{{ goCobertura }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleCobertura }}">Cobertura ANP</button>
+    <button type="button" onClick="{{ goTareas }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleTareas }}">Tareas</button>
+    <button type="button" onClick="{{ goDecisiones }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleDecisiones }}">Bitácora de decisiones</button>
+    <button type="button" onClick="{{ exportBackup }}" style="padding:9px 14px;border:1.5px solid #565b4d;background:transparent;color:#242a20;font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;box-shadow:none;">Exportar respaldo</button>
+    <label style="padding:9px 14px;border:1.5px solid #565b4d;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;">
+      Importar respaldo
+      <input type="file" accept="application/json" onChange="{{ importBackup }}" style="display:none;"/>
+    </label>
+  </div>
+
+  <!-- SINCRONIZACIÓN -->
+  <div style="background:#f1ede1;border:1.5px solid #565b4d;padding:12px 16px;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    <span style="font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;white-space:nowrap;">Sincronización</span>
+    <sc-if value="{{ isSyncConnected }}" hint-placeholder-val="{{ false }}">
+      <span style="font-size:12.5px;color:#2b4130;flex:1;min-width:160px;">🔗 {{ syncStatus }}</span>
+      <button type="button" onClick="{{ syncNowClick }}" disabled="{{ syncBusy }}" style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;padding:7px 12px;border:1.5px solid #242a20;background:transparent;color:#242a20;cursor:pointer;box-shadow:none;">Sincronizar ahora</button>
+      <button type="button" onClick="{{ disconnectSync }}" style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;padding:7px 12px;border:none;background:none;box-shadow:none;color:#a24a3a;cursor:pointer;">Desconectar</button>
+    </sc-if>
+    <sc-if value="{{ isSyncDisconnected }}" hint-placeholder-val="{{ true }}">
+      <input type="password" value="{{ syncPinInput }}" onChange="{{ setSyncPinInput }}" placeholder="PIN de sincronización" style="border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:6px 2px;font-family:'Source Sans 3', sans-serif;font-size:13.5px;width:180px;"/>
+      <button type="button" onClick="{{ connectSync }}" disabled="{{ syncBusy }}" style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;padding:7px 12px;border:1.5px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:none;">Conectar</button>
+      <span style="font-size:12px;color:#565b4d;flex:1;min-width:160px;">{{ syncStatus }}</span>
+    </sc-if>
+  </div>
+
+  <!-- FASES -->
+  <sc-if value="{{ isFases }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#f1ede1;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:22px;margin-bottom:20px;">
+      <h2 style="font-family:'Special Elite', monospace;font-size:18px;margin:0 0 4px;">Ruta de escalamiento</h2>
+      <p style="color:#565b4d;font-size:13px;margin:0 0 16px;">Da clic en una fase para editar su estado y notas de aprendizaje.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ phases }}" as="ph" hint-placeholder-count="4">
+          <div style="border:1.5px solid #242a20;background:#e7e2d1;padding:14px 16px;">
+            <div onClick="{{ togglePhase }}" data-idx="{{ $index }}" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;">
+              <span style="font-family:'Special Elite', monospace;font-size:15px;">{{ ph.orderLabel }}. {{ ph.name }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;padding:3px 9px;border:1px solid {{ ph.statusColor }};color:{{ ph.statusColor }};">{{ ph.status }}</span>
+            </div>
+            <sc-if value="{{ ph.isOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:10px;">
+                <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Notas de la fase</label>
+                <textarea value="{{ phaseDraftNotes }}" onChange="{{ setPhaseDraftNotes }}" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:8px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;min-height:60px;resize:vertical;box-sizing:border-box;"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+                  <select value="{{ phaseDraftStatus }}" onChange="{{ setPhaseDraftStatus }}" style="width:auto;border:1.5px dotted #565b4d;padding:6px 8px;font-family:'Source Sans 3', sans-serif;font-size:14px;">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="activa">Activa</option>
+                    <option value="completada">Completada</option>
+                  </select>
+                  <button type="button" onClick="{{ savePhase }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:transparent;color:#242a20;cursor:pointer;box-shadow:none;">Guardar notas</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- COBERTURA -->
+  <sc-if value="{{ isCobertura }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="background:#f1ede1;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:22px;margin-bottom:20px;">
+        <h2 style="font-family:'Special Elite', monospace;font-size:18px;margin:0 0 4px;">Registrar ANP</h2>
+        <p style="color:#565b4d;font-size:13px;margin:0 0 16px;">Da clic en el campo para desplegar las 232 ANP oficiales, o escribe para filtrar; el catálogo asigna la categoría de manejo automáticamente.</p>
+        <div style="position:relative;margin-bottom:14px;">
+          <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Buscar ANP por nombre ({{ catalogCount }} disponibles)</label>
+          <div style="position:relative;">
+            <input type="text" value="{{ anpQuery }}" onChange="{{ setAnpQuery }}" onFocus="{{ focusAnp }}" onBlur="{{ blurAnp }}" onKeyDown="{{ handleAnpKeyDown }}" placeholder="Ej. Sian Ka'an, Calakmul, Cabo Pulmo... (o clic para ver todas)" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 22px 7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+            <span style="position:absolute;right:2px;top:50%;transform:translateY(-50%);pointer-events:none;color:#565b4d;font-size:10px;">▾</span>
+          </div>
+          <sc-if value="{{ showSuggestions }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:0;right:0;top:100%;z-index:5;background:#f1ede1;border:1.5px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);max-height:280px;overflow-y:auto;">
+              <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3">
+                <div onMouseDown="{{ pickSuggestion }}" data-name="{{ s.name }}" style="display:flex;justify-content:space-between;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid #c7c0aa;font-size:13px;">
+                  <span>{{ s.name }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;color:{{ s.catColor }};">{{ s.cat }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 12px;background:#e7e2d1;border:1.5px solid #c7c0aa;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;padding:3px 9px;border:1px solid {{ selectedCatColor }};color:{{ selectedCatColor }};">{{ selectedCatLabel }}</span>
+            <span style="font-size:13.5px;flex:1;">{{ anpSelectedName }}</span>
+            <button type="button" onClick="{{ clearSelection }}" style="background:none;border:none;box-shadow:none;color:#a24a3a;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;">Quitar</button>
+          </div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Estado</label>
+            <select value="{{ anpStatusSel }}" onChange="{{ setAnpStatusSel }}" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;">
+              <option value="pendiente">Pendiente</option>
+              <option value="proceso">En proceso</option>
+              <option value="integrada">Integrada</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Nota (opcional)</label>
+            <input type="text" value="{{ anpNotesVal }}" onChange="{{ setAnpNotesVal }}" placeholder="Ej. falta validar clasificación" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" onClick="{{ addAnp }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">Agregar ANP</button>
+        </div>
+        <p style="font-family:'JetBrains Mono', monospace;font-size:11px;color:#565b4d;min-height:16px;margin-top:8px;">{{ anpMsg }}</p>
+      </div>
+
+      <div style="background:#f1ede1;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:22px;margin-bottom:20px;">
+        <h2 style="font-family:'Special Elite', monospace;font-size:18px;margin:0 0 4px;">Mosaico de cobertura</h2>
+        <div style="height:10px;background:#e7e2d1;border:1.5px solid #242a20;overflow:hidden;margin:10px 0 4px;">
+          <div style="height:100%;background:linear-gradient(90deg,#3c5940,#b9862c);width:{{ coveragePct }}%;"></div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11px;color:#565b4d;margin:8px 0 16px;">
+          <span><span style="color:#2b4130;">■</span> Integrada</span>
+          <span><span style="color:#b9862c;">■</span> En proceso</span>
+          <span><span style="color:#c7c0aa;">■</span> Sin registrar (de 232)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(24, 1fr);gap:3px;margin-bottom:18px;">
+          <sc-for list="{{ gridCells }}" as="cell" hint-placeholder-count="232">
+            <div title="{{ cell.title }}" style="aspect-ratio:1;background:{{ cell.bg }};border:1px solid {{ cell.border }};"></div>
+          </sc-for>
+        </div>
+        <h2 style="font-family:'Special Elite', monospace;font-size:18px;margin:6px 0 10px;">ANPs registradas</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <sc-for list="{{ categoryChips }}" as="c" hint-placeholder-count="4">
+            <button type="button" onClick="{{ setCategoryFilter }}" data-cat="{{ c.value }}" style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:6px 12px;cursor:pointer;{{ c.chipStyle }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <sc-if value="{{ anpListEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:32px 16px;color:#565b4d;font-family:'JetBrains Mono',monospace;font-size:12.5px;border:1.5px dashed #c7c0aa;">Aún no registras ANPs con este filtro. Agrega la primera arriba.</div>
+          </sc-if>
+          <sc-for list="{{ filteredAnps }}" as="a" hint-placeholder-count="0">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;background:#e7e2d1;border:1.5px solid #c7c0aa;font-size:13.5px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;padding:2px 7px;border:1px solid {{ a.catColor }};color:{{ a.catColor }};">{{ a.cat }}</span>
+              <span style="flex:1;">{{ a.name }}{{ a.notesSuffix }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;color:{{ a.statusColor }};">{{ a.status }}</span>
+              <button type="button" onClick="{{ removeAnp }}" data-idx="{{ a.rawIdx }}" style="background:none;border:none;box-shadow:none;color:#a24a3a;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:4px;text-transform:uppercase;">Eliminar</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- TAREAS -->
+  <sc-if value="{{ isTareas }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="background:#f1ede1;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:22px;margin-bottom:20px;">
+        <h2 style="font-family:'Special Elite', monospace;font-size:18px;margin:0 0 4px;">Nueva tarea</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Título</label>
+            <input type="text" value="{{ taskTitle }}" onChange="{{ setTaskTitle }}" placeholder="Ej. Configurar capa PostGIS" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Fase</label>
+            <select value="{{ taskPhase }}" onChange="{{ setTaskPhase }}" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;">
+              <sc-for list="{{ phases }}" as="ph2" hint-placeholder-count="4">
+                <option value="{{ ph2.id }}">{{ ph2.name }}</option>
+              </sc-for>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Responsable</label>
+            <input type="text" value="{{ taskOwner }}" onChange="{{ setTaskOwner }}" placeholder="Nombre" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Fecha límite</label>
+            <input type="date" value="{{ taskDue }}" onChange="{{ setTaskDue }}" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Estado</label>
+            <select value="{{ taskStatus }}" onChange="{{ setTaskStatus }}" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;">
+              <option value="pendiente">Pendiente</option>
+              <option value="progreso">En progreso</option>
+              <option value="bloqueada">Bloqueada</option>
+              <option value="completada">Completada</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">ANP relacionada (opcional)</label>
+            <select value="{{ taskAnp }}" onChange="{{ setTaskAnp }}" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;">
+              <option value="">Ninguna</option>
+              <sc-for list="{{ anps }}" as="ta" hint-placeholder-count="0">
+                <option value="{{ ta.name }}">{{ ta.name }}</option>
+              </sc-for>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Notas (opcional)</label>
+            <input type="text" value="{{ taskNotes }}" onChange="{{ setTaskNotes }}" placeholder="Contexto, dependencias, bloqueos..." style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="button" onClick="{{ addTask }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">Guardar tarea</button>
+        </div>
+        <p style="font-family:'JetBrains Mono', monospace;font-size:11px;color:#565b4d;min-height:16px;margin-top:8px;">{{ taskMsg }}</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <sc-for list="{{ taskFilterChips }}" as="tf" hint-placeholder-count="5">
+          <button type="button" onClick="{{ setTaskFilter }}" data-f="{{ tf.value }}" style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:6px 12px;cursor:pointer;{{ tf.chipStyle }}">{{ tf.label }}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ taskListEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding:32px 16px;color:#565b4d;font-family:'JetBrains Mono',monospace;font-size:12.5px;border:1.5px dashed #c7c0aa;">No hay tareas con este filtro.</div>
+      </sc-if>
+      <sc-for list="{{ filteredTasks }}" as="t" hint-placeholder-count="0">
+        <div style="border:1.5px solid #242a20;background:{{ t.bgColor }};padding:13px 15px;margin-bottom:10px;border-left:6px solid {{ t.leftColor }};">
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;">
+            <span style="font-family:'Special Elite', monospace;font-size:14.5px;">{{ t.title }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;padding:3px 9px;border:1px solid {{ t.leftColor }};color:{{ t.leftColor }};">{{ t.status }}</span>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11px;color:#565b4d;margin-top:6px;">
+            <span>{{ t.phaseName }}</span>
+            <sc-if value="{{ t.hasAnp }}" hint-placeholder-val="{{ false }}"><span>ANP: {{ t.anp }}</span></sc-if>
+            <sc-if value="{{ t.hasOwner }}" hint-placeholder-val="{{ false }}"><span>{{ t.owner }}</span></sc-if>
+            <sc-if value="{{ t.hasDue }}" hint-placeholder-val="{{ false }}"><span style="{{ t.dueStyle }}">{{ t.dueLabel }}</span></sc-if>
+          </div>
+          <sc-if value="{{ t.hasNotes }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:12.5px;color:#565b4d;margin-top:6px;">{{ t.notes }}</div>
+          </sc-if>
+          <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+            <button type="button" onClick="{{ removeTask }}" data-idx="{{ t.rawIdx }}" style="background:none;border:none;box-shadow:none;color:#a24a3a;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:4px;text-transform:uppercase;">Eliminar</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- DECISIONES -->
+  <sc-if value="{{ isDecisiones }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="background:#f1ede1;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:22px;margin-bottom:20px;">
+        <h2 style="font-family:'Special Elite', monospace;font-size:18px;margin:0 0 4px;">Registrar decisión o reunión</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Fecha</label>
+            <input type="date" value="{{ decDate }}" onChange="{{ setDecDate }}" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Tema</label>
+            <input type="text" value="{{ decTopic }}" onChange="{{ setDecTopic }}" placeholder="Ej. Definición de arquitectura ArcGIS Online" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Decisión / acuerdo</label>
+          <textarea value="{{ decText }}" onChange="{{ setDecText }}" placeholder="Qué se decidió y por qué" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:8px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;min-height:60px;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Participantes (opcional)</label>
+            <input type="text" value="{{ decPart }}" onChange="{{ setDecPart }}" placeholder="Nombres separados por coma" style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
+          </div>
+          <div>
+            <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">ANP relacionada (opcional)</label>
+            <select value="{{ decAnp }}" onChange="{{ setDecAnp }}" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;">
+              <option value="">Ninguna</option>
+              <sc-for list="{{ anps }}" as="da" hint-placeholder-count="0">
+                <option value="{{ da.name }}">{{ da.name }}</option>
+              </sc-for>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="button" onClick="{{ addDecision }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">Guardar</button>
+        </div>
+        <p style="font-family:'JetBrains Mono', monospace;font-size:11px;color:#565b4d;min-height:16px;margin-top:8px;">{{ decMsg }}</p>
+      </div>
+      <sc-if value="{{ decListEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;padding:32px 16px;color:#565b4d;font-family:'JetBrains Mono',monospace;font-size:12.5px;border:1.5px dashed #c7c0aa;">Aún no hay decisiones registradas.</div>
+      </sc-if>
+      <sc-for list="{{ orderedDecisions }}" as="d" hint-placeholder-count="0">
+        <div style="border:1.5px solid #242a20;background:#e7e2d1;padding:13px 15px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#565b4d;">
+            <span>{{ d.date }}</span>
+            <button type="button" onClick="{{ removeDecision }}" data-idx="{{ d.rawIdx }}" style="background:none;border:none;box-shadow:none;color:#a24a3a;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:4px;text-transform:uppercase;">Eliminar</button>
+          </div>
+          <div style="font-family:'Special Elite', monospace;font-size:14.5px;margin:4px 0 6px;">{{ d.topic }}</div>
+          <p style="font-size:13.5px;line-height:1.5;margin:0 0 6px;white-space:pre-wrap;">{{ d.text }}</p>
+          <sc-if value="{{ d.hasAnp }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#565b4d;">ANP: {{ d.anp }}</div></sc-if>
+          <sc-if value="{{ d.hasPart }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#565b4d;">Participantes: {{ d.participants }}</div></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const PHASE_DEFS = [
+  {id:"piloto", name:"Piloto — Laguna de Términos"},
+  {id:"validacion", name:"Validación técnica"},
+  {id:"escalamiento", name:"Escalamiento regional"},
+  {id:"cobertura", name:"Cobertura nacional (232 ANPs)"}
+];
+const TOTAL_ANP = 232;
+const CAT_COLORS = { APFF:"#8a651f", APRN:"#a24a3a", PN:"#33637d", RB:"#2b4130", MN:"#565b4d", SANT:"#3c5940", OTRO:"#7d7a6c" };
+const STATUS_COLORS_PHASE = { pendiente:"#565b4d", activa:"#b9862c", completada:"#2b4130" };
+const STATUS_COLORS_ANP = { pendiente:"#565b4d", proceso:"#8a651f", integrada:"#2b4130" };
+const STATUS_COLORS_TASK = { pendiente:"#565b4d", progreso:"#33637d", bloqueada:"#a24a3a", completada:"#2b4130" };
+const TASK_FILTERS = ["Todas","pendiente","progreso","bloqueada","completada"];
+
+function escapeText(s){ return s || ""; }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function normalizeStr(s){
+  return (s || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+// --- Sincronización (Supabase) ---
+// Reemplaza estos dos valores con los de tu proyecto:
+// Project Settings → API → "Project URL" y "anon public" key.
+const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON_KEY = "TU_ANON_PUBLIC_KEY_AQUI";
+const SYNC_PIN_STORAGE_KEY = "simsat-diario-sync-pin";
+
+class Component extends DCLogic {
+  state = {
+    view: "fases",
+    catalog: [],
+    catLabels: {},
+    phases: PHASE_DEFS.map((p,i)=>({...p, status: i===0?"activa":"pendiente", notes:""})),
+    openPhaseIdx: -1,
+    phaseDraftNotes: "",
+    phaseDraftStatus: "",
+    anps: [],
+    categoryFilter: "Todas",
+    anpQuery: "",
+    anpFocused: false,
+    anpSelected: null,
+    anpStatusSel: "pendiente",
+    anpNotesVal: "",
+    anpMsg: "",
+    tasks: [],
+    taskFilter: "Todas",
+    taskTitle:"", taskPhase:"piloto", taskOwner:"", taskDue:"", taskStatus:"pendiente", taskNotes:"", taskAnp:"",
+    taskMsg: "",
+    decisions: [],
+    decDate: todayStr(), decTopic:"", decText:"", decPart:"", decAnp:"",
+    decMsg: "",
+    lastSaved: null,
+    syncPin: "",
+    syncPinInput: "",
+    syncConnected: false,
+    syncBusy: false,
+    syncStatus: "",
+    lastSyncedAt: null
+  };
+
+  async componentDidMount(){
+    this.storage = window.storage || (function(){
+      const PREFIX = "simsat-diario::";
+      return {
+        async get(key){ const raw = localStorage.getItem(PREFIX+key); if(raw===null) throw new Error("not found"); return {key, value: raw}; },
+        async set(key, value){ localStorage.setItem(PREFIX+key, value); return {key, value}; },
+        async delete(key){ localStorage.removeItem(PREFIX+key); return {key, deleted:true}; }
+      };
+    })();
+    try{
+      const mod = await import("./anp-catalog.js");
+      this.setState({ catalog: mod.ANP_CATALOG || [], catLabels: mod.ANP_CAT_LABELS || {} });
+    }catch(e){ console.error("no se pudo cargar el catálogo de ANP", e); }
+    try{
+      const res = await this.storage.get("simsat-diario-data");
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        const merged = {};
+        if(Array.isArray(parsed.phases)){
+          merged.phases = PHASE_DEFS.map((p,i)=>{
+            const found = parsed.phases.find(x=>x.id===p.id);
+            return found ? {...p, status:found.status, notes:found.notes||""} : {...p, status:i===0?"activa":"pendiente", notes:""};
+          });
+        }
+        if(Array.isArray(parsed.anps)) merged.anps = parsed.anps;
+        if(Array.isArray(parsed.tasks)) merged.tasks = parsed.tasks;
+        if(Array.isArray(parsed.decisions)) merged.decisions = parsed.decisions;
+        if(parsed.lastSaved) merged.lastSaved = parsed.lastSaved;
+        this.setState(merged);
+      }
+    }catch(e){ /* primer uso */ }
+    try{
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      this.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }catch(e){ console.error("no se pudo cargar supabase-js", e); this.supabase = null; }
+    const savedPin = localStorage.getItem(SYNC_PIN_STORAGE_KEY);
+    if(savedPin && this.supabase){
+      this.setState({ syncPin: savedPin, syncPinInput: savedPin, syncConnected: true, syncStatus: "Conectando..." });
+      this.syncNow(savedPin);
+    }
+  }
+
+  async persist(extra){
+    const next = { ...this.state, ...(extra||{}), lastSaved: new Date().toISOString() };
+    if(extra) this.setState(extra);
+    this.setState({ lastSaved: next.lastSaved });
+    try{
+      await this.storage.set("simsat-diario-data", JSON.stringify({
+        phases: next.phases, anps: next.anps, tasks: next.tasks, decisions: next.decisions, lastSaved: next.lastSaved
+      }));
+    }catch(e){ console.error("storage error", e); }
+    if(this.state.syncConnected && this.state.syncPin){
+      this.pushToSupabase(this.state.syncPin, next);
+    }
+  }
+
+  setSyncPinInput = (e) => this.setState({ syncPinInput: e.target.value });
+
+  connectSync = async () => {
+    if(!this.supabase){ this.setState({ syncStatus: "No se pudo cargar el cliente de Supabase (revisa tu conexión)." }); return; }
+    const pin = this.state.syncPinInput.trim();
+    if(!pin){ this.setState({ syncStatus: "Escribe tu PIN de sincronización." }); return; }
+    this.setState({ syncBusy: true, syncStatus: "Conectando..." });
+    const ok = await this.syncNow(pin);
+    if(ok){
+      localStorage.setItem(SYNC_PIN_STORAGE_KEY, pin);
+      this.setState({ syncPin: pin, syncConnected: true });
+    }
+  };
+
+  disconnectSync = () => {
+    localStorage.removeItem(SYNC_PIN_STORAGE_KEY);
+    this.setState({ syncPin: "", syncPinInput: "", syncConnected: false, syncStatus: "Sincronización desactivada en este dispositivo (tus datos locales no se borraron)." });
+  };
+
+  syncNowClick = () => { this.syncNow(); };
+
+  // Trae los datos remotos; si son más nuevos que los locales, los adopta.
+  // Si los locales son más nuevos (o no hay remotos aún), sube los locales.
+  syncNow = async (pinOverride) => {
+    const pin = pinOverride || this.state.syncPin;
+    if(!this.supabase || !pin) return false;
+    this.setState({ syncBusy: true, syncStatus: "Sincronizando..." });
+    try{
+      const { data, error } = await this.supabase.rpc("get_diario", { p_pin: pin });
+      if(error) throw error;
+      const remote = data || {};
+      const remoteTime = remote.lastSaved ? new Date(remote.lastSaved).getTime() : 0;
+      const localTime = this.state.lastSaved ? new Date(this.state.lastSaved).getTime() : 0;
+      if(remoteTime > localTime){
+        const merged = {
+          phases: Array.isArray(remote.phases) ? PHASE_DEFS.map((p,i)=>{
+            const f = remote.phases.find(x=>x.id===p.id);
+            return f ? {...p, status:f.status, notes:f.notes||""} : {...p, status:i===0?"activa":"pendiente", notes:""};
+          }) : this.state.phases,
+          anps: Array.isArray(remote.anps) ? remote.anps : this.state.anps,
+          tasks: Array.isArray(remote.tasks) ? remote.tasks : this.state.tasks,
+          decisions: Array.isArray(remote.decisions) ? remote.decisions : this.state.decisions,
+          lastSaved: remote.lastSaved
+        };
+        this.setState(merged);
+        await this.storage.set("simsat-diario-data", JSON.stringify(merged));
+        this.setState({ syncStatus: "Se cargaron datos más recientes de otro dispositivo.", syncConnected:true, syncBusy:false, lastSyncedAt: new Date().toISOString() });
+      } else {
+        await this.pushToSupabase(pin);
+        this.setState({ syncStatus: "Sincronizado.", syncConnected:true, syncBusy:false, lastSyncedAt: new Date().toISOString() });
+      }
+      return true;
+    }catch(e){
+      console.error("sync error", e);
+      this.setState({ syncStatus: "PIN incorrecto o sin conexión.", syncBusy:false });
+      return false;
+    }
+  };
+
+  pushToSupabase = async (pinOverride, stateOverride) => {
+    const pin = pinOverride || this.state.syncPin;
+    if(!this.supabase || !pin) return;
+    const s = stateOverride || this.state;
+    const payload = { phases:s.phases, anps:s.anps, tasks:s.tasks, decisions:s.decisions, lastSaved:s.lastSaved };
+    try{
+      const { error } = await this.supabase.rpc("save_diario", { p_pin: pin, p_data: payload });
+      if(error) throw error;
+    }catch(e){ console.error("push a supabase falló", e); }
+  };
+
+  goFases = () => this.setState({ view:"fases" });
+  goCobertura = () => this.setState({ view:"cobertura" });
+  goTareas = () => this.setState({ view:"tareas" });
+  goDecisiones = () => this.setState({ view:"decisiones" });
+
+  togglePhase = (e) => {
+    const idx = Number(e.currentTarget.dataset.idx);
+    if(this.state.openPhaseIdx === idx){
+      this.setState({ openPhaseIdx:-1 });
+    } else {
+      const ph = this.state.phases[idx];
+      this.setState({ openPhaseIdx: idx, phaseDraftNotes: ph.notes||"", phaseDraftStatus: ph.status });
+    }
+  };
+  setPhaseDraftNotes = (e) => this.setState({ phaseDraftNotes: e.target.value });
+  setPhaseDraftStatus = (e) => this.setState({ phaseDraftStatus: e.target.value });
+  savePhase = () => {
+    const idx = this.state.openPhaseIdx;
+    if(idx < 0) return;
+    const phases = this.state.phases.map((p,i)=> i===idx ? {...p, notes:this.state.phaseDraftNotes, status:this.state.phaseDraftStatus} : p);
+    this.persist({ phases, openPhaseIdx:-1 });
+  };
+
+  setAnpQuery = (e) => this.setState({ anpQuery: e.target.value, anpSelected: null });
+  focusAnp = () => this.setState({ anpFocused: true });
+  blurAnp = () => this.setState({ anpFocused: false });
+  handleAnpKeyDown = (e) => {
+    if(e.key === "Escape"){ this.setState({ anpFocused:false }); e.currentTarget.blur(); }
+  };
+  pickSuggestion = (e) => {
+    const name = e.currentTarget.dataset.name;
+    const item = this.state.catalog.find(a=>a.name===name);
+    if(item) this.setState({ anpSelected:item, anpQuery:item.name, anpFocused:false });
+  };
+  clearSelection = () => this.setState({ anpSelected:null, anpQuery:"" });
+  setAnpStatusSel = (e) => this.setState({ anpStatusSel: e.target.value });
+  setAnpNotesVal = (e) => this.setState({ anpNotesVal: e.target.value });
+  setCategoryFilter = (e) => this.setState({ categoryFilter: e.currentTarget.dataset.cat });
+
+  addAnp = () => {
+    let name, cat, catLabel;
+    if(this.state.anpSelected){
+      name = this.state.anpSelected.name; cat = this.state.anpSelected.cat; catLabel = this.state.anpSelected.catLabel;
+    } else if(this.state.anpQuery.trim()){
+      name = this.state.anpQuery.trim(); cat = "OTRO"; catLabel = "Otro / sin categoría";
+    } else {
+      this.setState({ anpMsg: "Escribe o elige un ANP del catálogo." });
+      return;
+    }
+    const anps = [...this.state.anps, { name, cat, catLabel, status:this.state.anpStatusSel, notes:this.state.anpNotesVal.trim() }];
+    this.persist({ anps });
+    this.setState({ anpQuery:"", anpSelected:null, anpNotesVal:"", anpStatusSel:"pendiente", anpMsg:"ANP registrada." });
+    setTimeout(()=>this.setState({ anpMsg:"" }), 2000);
+  };
+  removeAnp = (e) => {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const anps = this.state.anps.filter((_,i)=>i!==idx);
+    this.persist({ anps });
+  };
+
+  setTaskTitle = (e) => this.setState({ taskTitle: e.target.value });
+  setTaskPhase = (e) => this.setState({ taskPhase: e.target.value });
+  setTaskOwner = (e) => this.setState({ taskOwner: e.target.value });
+  setTaskDue = (e) => this.setState({ taskDue: e.target.value });
+  setTaskStatus = (e) => this.setState({ taskStatus: e.target.value });
+  setTaskAnp = (e) => this.setState({ taskAnp: e.target.value });
+  setTaskNotes = (e) => this.setState({ taskNotes: e.target.value });
+  setTaskFilter = (e) => this.setState({ taskFilter: e.currentTarget.dataset.f });
+
+  addTask = () => {
+    if(!this.state.taskTitle.trim()){ this.setState({ taskMsg:"Escribe un título para la tarea." }); return; }
+    const tasks = [...this.state.tasks, {
+      title:this.state.taskTitle.trim(), phase:this.state.taskPhase, owner:this.state.taskOwner.trim(),
+      due:this.state.taskDue, status:this.state.taskStatus, notes:this.state.taskNotes.trim(), anp:this.state.taskAnp
+    }];
+    this.persist({ tasks });
+    this.setState({ taskTitle:"", taskOwner:"", taskDue:"", taskNotes:"", taskStatus:"pendiente", taskAnp:"", taskMsg:"Tarea guardada." });
+    setTimeout(()=>this.setState({ taskMsg:"" }), 2000);
+  };
+  removeTask = (e) => {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const tasks = this.state.tasks.filter((_,i)=>i!==idx);
+    this.persist({ tasks });
+  };
+
+  setDecDate = (e) => this.setState({ decDate: e.target.value });
+  setDecTopic = (e) => this.setState({ decTopic: e.target.value });
+  setDecText = (e) => this.setState({ decText: e.target.value });
+  setDecPart = (e) => this.setState({ decPart: e.target.value });
+  setDecAnp = (e) => this.setState({ decAnp: e.target.value });
+  addDecision = () => {
+    if(!this.state.decTopic.trim() || !this.state.decText.trim()){ this.setState({ decMsg:"Escribe el tema y la decisión." }); return; }
+    const decisions = [...this.state.decisions, {
+      date:this.state.decDate || todayStr(), topic:this.state.decTopic.trim(), text:this.state.decText.trim(),
+      participants:this.state.decPart.trim(), anp:this.state.decAnp
+    }];
+    this.persist({ decisions });
+    this.setState({ decTopic:"", decText:"", decPart:"", decAnp:"", decDate:todayStr(), decMsg:"Registro guardado." });
+    setTimeout(()=>this.setState({ decMsg:"" }), 2000);
+  };
+  removeDecision = (e) => {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const decisions = this.state.decisions.filter((_,i)=>i!==idx);
+    this.persist({ decisions });
+  };
+
+  exportBackup = () => {
+    const payload = { phases:this.state.phases, anps:this.state.anps, tasks:this.state.tasks, decisions:this.state.decisions, lastSaved:new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "simsat-diario-respaldo-" + todayStr() + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  importBackup = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      const merged = {
+        phases: Array.isArray(imported.phases) ? PHASE_DEFS.map((p,i)=>{ const f = imported.phases.find(x=>x.id===p.id); return f ? {...p, status:f.status, notes:f.notes||""} : {...p, status:i===0?"activa":"pendiente", notes:""}; }) : this.state.phases,
+        anps: Array.isArray(imported.anps) ? imported.anps : this.state.anps,
+        tasks: Array.isArray(imported.tasks) ? imported.tasks : this.state.tasks,
+        decisions: Array.isArray(imported.decisions) ? imported.decisions : this.state.decisions
+      };
+      this.persist(merged);
+    }catch(err){ console.error(err); }
+    e.target.value = "";
+  };
+
+  renderVals(){
+    const s = this.state;
+    const isFases = s.view === "fases";
+    const isCobertura = s.view === "cobertura";
+    const isTareas = s.view === "tareas";
+    const isDecisiones = s.view === "decisiones";
+
+    const activeStyle = "background:#242a20;color:#e7e2d1;border:1.5px solid #242a20;";
+    const inactiveStyle = "background:#f1ede1;border:1.5px solid #565b4d;color:#565b4d;";
+
+    const phases = s.phases.map((p,i)=>({
+      ...p, orderLabel: i+1, isOpen: s.openPhaseIdx===i, statusColor: STATUS_COLORS_PHASE[p.status]||"#565b4d"
+    }));
+    const activePhase = s.phases.find(p=>p.status==="activa");
+
+    const integradaCount = s.anps.filter(a=>a.status==="integrada").length;
+    const coveragePct = Math.min(100, (integradaCount/TOTAL_ANP)*100);
+
+    const normQuery = normalizeStr(s.anpQuery);
+    let suggestions = [];
+    if(!s.anpSelected){
+      const pool = normQuery.length === 0
+        ? (s.anpFocused ? s.catalog : [])
+        : s.catalog.filter(a=>normalizeStr(a.name).includes(normQuery));
+      suggestions = pool.slice().sort((a,b)=>a.name.localeCompare(b.name,'es'))
+        .map(a=>({ name:a.name, cat:a.cat, catColor: CAT_COLORS[a.cat]||"#7d7a6c" }));
+    }
+
+    const catsPresent = [...new Set(s.catalog.map(a=>a.cat))].sort();
+    const categoryChips = ["Todas", ...catsPresent].map(c=>({
+      value:c, label:c, chipStyle: s.categoryFilter===c ? activeStyle : inactiveStyle
+    }));
+    const filteredAnpsRaw = s.categoryFilter==="Todas" ? s.anps : s.anps.filter(a=>a.cat===s.categoryFilter);
+    const filteredAnps = filteredAnpsRaw.slice().reverse().map(a=>{
+      const rawIdx = s.anps.indexOf(a);
+      return { ...a, rawIdx, notesSuffix: a.notes ? (" — " + a.notes) : "", statusColor: STATUS_COLORS_ANP[a.status]||"#565b4d", catColor: CAT_COLORS[a.cat]||"#7d7a6c" };
+    });
+
+    const ordered = [
+      ...s.anps.filter(a=>a.status==="integrada"),
+      ...s.anps.filter(a=>a.status==="proceso"),
+      ...s.anps.filter(a=>a.status==="pendiente")
+    ];
+    const gridCells = [];
+    for(let i=0;i<TOTAL_ANP;i++){
+      const a = ordered[i];
+      gridCells.push({
+        title: a ? (a.name+" — "+a.status) : "Sin registrar",
+        bg: a ? (a.status==="integrada" ? "#2b4130" : "#b9862c") : "#e7e2d1",
+        border: a ? (a.status==="integrada" ? "#2b4130" : "#b9862c") : "#c7c0aa"
+      });
+    }
+
+    const today = todayStr();
+    const activeTaskCount = s.tasks.filter(t=>t.status==="pendiente"||t.status==="progreso").length;
+    const overdueTaskCount = s.tasks.filter(t=>t.due && t.due<today && t.status!=="completada").length;
+
+    const taskFilterChips = TASK_FILTERS.map(f=>({ value:f, label:f, chipStyle: s.taskFilter===f ? activeStyle : inactiveStyle }));
+    let taskList = s.taskFilter==="Todas" ? s.tasks.slice() : s.tasks.filter(t=>t.status===s.taskFilter);
+    taskList.sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999"));
+    const filteredTasks = taskList.map(t=>{
+      const rawIdx = s.tasks.indexOf(t);
+      const isOverdue = t.due && t.due<today && t.status!=="completada";
+      const phaseName = (s.phases.find(p=>p.id===t.phase)||{}).name || t.phase;
+      return {
+        ...t, rawIdx, phaseName,
+        hasAnp: !!t.anp, hasOwner: !!t.owner, hasDue: !!t.due, hasNotes: !!t.notes,
+        dueLabel: t.due ? (t.due + (isOverdue ? " (vencida)" : "")) : "",
+        dueStyle: isOverdue ? "color:#a24a3a;" : "",
+        leftColor: STATUS_COLORS_TASK[t.status]||"#565b4d",
+        bgColor: isOverdue ? "#f2e3de" : "#e7e2d1"
+      };
+    });
+
+    const orderedDecisions = s.decisions.slice().reverse().map(d=>{
+      const rawIdx = s.decisions.indexOf(d);
+      return { ...d, rawIdx, hasAnp: !!d.anp, hasPart: !!d.participants };
+    });
+
+    return {
+      isFases, isCobertura, isTareas, isDecisiones,
+      tabStyleFases: isFases?activeStyle:inactiveStyle,
+      tabStyleCobertura: isCobertura?activeStyle:inactiveStyle,
+      tabStyleTareas: isTareas?activeStyle:inactiveStyle,
+      tabStyleDecisiones: isDecisiones?activeStyle:inactiveStyle,
+      goFases:this.goFases, goCobertura:this.goCobertura, goTareas:this.goTareas, goDecisiones:this.goDecisiones,
+      exportBackup:this.exportBackup, importBackup:this.importBackup,
+      coverageLabel: integradaCount+"/"+TOTAL_ANP,
+      activePhaseName: activePhase ? activePhase.name : "—",
+      activeTaskCount, overdueTaskCount,
+      lastSavedLabel: s.lastSaved ? (" · último guardado " + new Date(s.lastSaved).toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'})) : "",
+      phases, togglePhase:this.togglePhase, phaseDraftNotes:s.phaseDraftNotes, phaseDraftStatus:s.phaseDraftStatus,
+      setPhaseDraftNotes:this.setPhaseDraftNotes, setPhaseDraftStatus:this.setPhaseDraftStatus, savePhase:this.savePhase,
+      anpQuery:s.anpQuery, setAnpQuery:this.setAnpQuery, focusAnp:this.focusAnp, blurAnp:this.blurAnp, handleAnpKeyDown:this.handleAnpKeyDown,
+      catalogCount: s.catalog.length,
+      showSuggestions: suggestions.length>0, suggestions, pickSuggestion:this.pickSuggestion,
+      hasSelection: !!s.anpSelected, anpSelectedName: s.anpSelected ? s.anpSelected.name : "",
+      selectedCatLabel: s.anpSelected ? s.anpSelected.catLabel : "", selectedCatColor: s.anpSelected ? (CAT_COLORS[s.anpSelected.cat]||"#7d7a6c") : "#7d7a6c",
+      clearSelection:this.clearSelection,
+      anpStatusSel:s.anpStatusSel, setAnpStatusSel:this.setAnpStatusSel, anpNotesVal:s.anpNotesVal, setAnpNotesVal:this.setAnpNotesVal,
+      addAnp:this.addAnp, anpMsg:s.anpMsg,
+      coveragePct, categoryChips, setCategoryFilter:this.setCategoryFilter,
+      anpListEmpty: filteredAnps.length===0, filteredAnps, removeAnp:this.removeAnp,
+      gridCells,
+      anps: s.anps,
+      taskTitle:s.taskTitle, setTaskTitle:this.setTaskTitle, taskPhase:s.taskPhase, setTaskPhase:this.setTaskPhase,
+      taskOwner:s.taskOwner, setTaskOwner:this.setTaskOwner, taskDue:s.taskDue, setTaskDue:this.setTaskDue,
+      taskStatus:s.taskStatus, setTaskStatus:this.setTaskStatus, taskAnp:s.taskAnp, setTaskAnp:this.setTaskAnp,
+      taskNotes:s.taskNotes, setTaskNotes:this.setTaskNotes, addTask:this.addTask, taskMsg:s.taskMsg,
+      taskFilterChips, setTaskFilter:this.setTaskFilter, taskListEmpty: filteredTasks.length===0, filteredTasks, removeTask:this.removeTask,
+      decDate:s.decDate, setDecDate:this.setDecDate, decTopic:s.decTopic, setDecTopic:this.setDecTopic,
+      decText:s.decText, setDecText:this.setDecText, decPart:s.decPart, setDecPart:this.setDecPart,
+      decAnp:s.decAnp, setDecAnp:this.setDecAnp, addDecision:this.addDecision, decMsg:s.decMsg,
+      decListEmpty: s.decisions.length===0, orderedDecisions, removeDecision:this.removeDecision,
+      isSyncConnected: s.syncConnected, isSyncDisconnected: !s.syncConnected,
+      syncPinInput: s.syncPinInput, setSyncPinInput: this.setSyncPinInput,
+      connectSync: this.connectSync, disconnectSync: this.disconnectSync, syncNowClick: this.syncNowClick,
+      syncStatus: s.syncStatus, syncBusy: s.syncBusy
+    };
+  }
+}
+</script>
+</body>
+</html>
