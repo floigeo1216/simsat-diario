@@ -19,7 +19,7 @@ alter table diario_sync enable row level security;
 
 -- Fila única para tu bitácora personal.
 insert into diario_sync (id, pin_hash, data)
-values ('floi-simsat', crypt('CAMBIA_ESTE_PIN', gen_salt('bf')), '{}'::jsonb)
+values ('floi-simsat', crypt('HolasoySIMSAT2026', gen_salt('bf')), '{}'::jsonb)
 on conflict (id) do nothing;
 
 create or replace function get_diario(p_pin text)
