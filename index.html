@@ -243,8 +243,11 @@
             <input type="text" value="{{ taskNotes }}" onChange="{{ setTaskNotes }}" placeholder="Contexto, dependencias, bloqueos..." style="width:100%;border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;box-sizing:border-box;"/>
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;">
-          <button type="button" onClick="{{ addTask }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">Guardar tarea</button>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <sc-if value="{{ isEditingTask }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ cancelEditTask }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:1.5px solid #565b4d;background:transparent;color:#565b4d;cursor:pointer;box-shadow:none;">Cancelar</button>
+          </sc-if>
+          <button type="button" onClick="{{ addTask }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">{{ taskSubmitLabel }}</button>
         </div>
         <p style="font-family:'JetBrains Mono', monospace;font-size:11px;color:#565b4d;min-height:16px;margin-top:8px;">{{ taskMsg }}</p>
       </div>
@@ -271,7 +274,8 @@
           <sc-if value="{{ t.hasNotes }}" hint-placeholder-val="{{ false }}">
             <div style="font-size:12.5px;color:#565b4d;margin-top:6px;">{{ t.notes }}</div>
           </sc-if>
-          <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+          <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;">
+            <button type="button" onClick="{{ editTask }}" data-idx="{{ t.rawIdx }}" style="background:none;border:none;box-shadow:none;color:#33637d;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:4px;text-transform:uppercase;">Editar</button>
             <button type="button" onClick="{{ removeTask }}" data-idx="{{ t.rawIdx }}" style="background:none;border:none;box-shadow:none;color:#a24a3a;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:4px;text-transform:uppercase;">Eliminar</button>
           </div>
         </div>
@@ -387,7 +391,7 @@ class Component extends DCLogic {
     anpMsg: "",
     tasks: [],
     taskFilter: "Todas",
-    taskTitle:"", taskPhase:"piloto", taskOwner:"", taskDue:"", taskStatus:"pendiente", taskNotes:"", taskAnp:"",
+    taskTitle:"", taskPhase:"piloto", taskOwner:"", taskDue:"", taskStatus:"pendiente", taskNotes:"", taskAnp:"", taskEditIdx:null,
     taskMsg: "",
     decisions: [],
     decDate: todayStr(), decTopic:"", decText:"", decPart:"", decAnp:"",
@@ -624,18 +628,41 @@ class Component extends DCLogic {
 
   addTask = () => {
     if(!this.state.taskTitle.trim()){ this.setState({ taskMsg:"Escribe un título para la tarea." }); return; }
-    const tasks = [...this.state.tasks, {
+    const entry = {
       title:this.state.taskTitle.trim(), phase:this.state.taskPhase, owner:this.state.taskOwner.trim(),
       due:this.state.taskDue, status:this.state.taskStatus, notes:this.state.taskNotes.trim(), anp:this.state.taskAnp
-    }];
+    };
+    let tasks;
+    let msg;
+    if(this.state.taskEditIdx !== null){
+      tasks = this.state.tasks.map((t,i)=> i===this.state.taskEditIdx ? entry : t);
+      msg = "Cambios guardados.";
+    } else {
+      tasks = [...this.state.tasks, entry];
+      msg = "Tarea guardada.";
+    }
     this.persist({ tasks });
-    this.setState({ taskTitle:"", taskOwner:"", taskDue:"", taskNotes:"", taskStatus:"pendiente", taskAnp:"", taskMsg:"Tarea guardada." });
+    this.setState({ taskTitle:"", taskOwner:"", taskDue:"", taskNotes:"", taskStatus:"pendiente", taskAnp:"", taskEditIdx:null, taskMsg:msg });
     setTimeout(()=>this.setState({ taskMsg:"" }), 2000);
+  };
+  editTask = (e) => {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const t = this.state.tasks[idx];
+    if(!t) return;
+    this.setState({
+      taskEditIdx: idx, taskTitle:t.title, taskPhase:t.phase, taskOwner:t.owner||"",
+      taskDue:t.due||"", taskStatus:t.status, taskNotes:t.notes||"", taskAnp:t.anp||"",
+      taskMsg: "Editando \"" + t.title + "\" — ajusta y da clic en Guardar cambios."
+    });
+  };
+  cancelEditTask = () => {
+    this.setState({ taskEditIdx:null, taskTitle:"", taskOwner:"", taskDue:"", taskNotes:"", taskStatus:"pendiente", taskAnp:"", taskMsg:"" });
   };
   removeTask = (e) => {
     const idx = Number(e.currentTarget.dataset.idx);
     const tasks = this.state.tasks.filter((_,i)=>i!==idx);
     this.persist({ tasks });
+    if(this.state.taskEditIdx === idx) this.cancelEditTask();
   };
 
   setDecDate = (e) => this.setState({ decDate: e.target.value });
@@ -797,6 +824,9 @@ class Component extends DCLogic {
       taskOwner:s.taskOwner, setTaskOwner:this.setTaskOwner, taskDue:s.taskDue, setTaskDue:this.setTaskDue,
       taskStatus:s.taskStatus, setTaskStatus:this.setTaskStatus, taskAnp:s.taskAnp, setTaskAnp:this.setTaskAnp,
       taskNotes:s.taskNotes, setTaskNotes:this.setTaskNotes, addTask:this.addTask, taskMsg:s.taskMsg,
+      isEditingTask: s.taskEditIdx !== null,
+      taskSubmitLabel: s.taskEditIdx !== null ? "Guardar cambios" : "Guardar tarea",
+      cancelEditTask:this.cancelEditTask, editTask:this.editTask,
       taskFilterChips, setTaskFilter:this.setTaskFilter, taskListEmpty: filteredTasks.length===0, filteredTasks, removeTask:this.removeTask,
       decDate:s.decDate, setDecDate:this.setDecDate, decTopic:s.decTopic, setDecTopic:this.setDecTopic,
       decText:s.decText, setDecText:this.setDecText, decPart:s.decPart, setDecPart:this.setDecPart,
