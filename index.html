@@ -143,7 +143,10 @@
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:10px;">
-          <button type="button" onClick="{{ addAnp }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">Agregar ANP</button>
+          <sc-if value="{{ isEditingAnp }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ cancelEditAnp }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:1.5px solid #565b4d;background:transparent;color:#565b4d;cursor:pointer;box-shadow:none;">Cancelar</button>
+          </sc-if>
+          <button type="button" onClick="{{ addAnp }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 18px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">{{ anpSubmitLabel }}</button>
         </div>
         <p style="font-family:'JetBrains Mono', monospace;font-size:11px;color:#565b4d;min-height:16px;margin-top:8px;">{{ anpMsg }}</p>
       </div>
@@ -178,6 +181,7 @@
               <span style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;padding:2px 7px;border:1px solid {{ a.catColor }};color:{{ a.catColor }};">{{ a.cat }}</span>
               <span style="flex:1;">{{ a.name }}{{ a.notesSuffix }}</span>
               <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;color:{{ a.statusColor }};">{{ a.status }}</span>
+              <button type="button" onClick="{{ editAnp }}" data-idx="{{ a.rawIdx }}" style="background:none;border:none;box-shadow:none;color:#33637d;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:4px;text-transform:uppercase;">Editar</button>
               <button type="button" onClick="{{ removeAnp }}" data-idx="{{ a.rawIdx }}" style="background:none;border:none;box-shadow:none;color:#a24a3a;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:4px;text-transform:uppercase;">Eliminar</button>
             </div>
           </sc-for>
@@ -359,8 +363,8 @@ function normalizeStr(s){
 // --- Sincronización (Supabase) ---
 // Reemplaza estos dos valores con los de tu proyecto:
 // Project Settings → API → "Project URL" y "anon public" key.
-const SUPABASE_URL = "https://gyyoxtrnkwxtyvzzmlwo.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5eW94dHJua3d4dHl2enptbHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MDM3MDYsImV4cCI6MjA5OTI3OTcwNn0.BG10RRjSkOvC_PM4i4l7k4acLKEfidDIO8S26bo-ycE";
+const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON_KEY = "TU_ANON_PUBLIC_KEY_AQUI";
 const SYNC_PIN_STORAGE_KEY = "simsat-diario-sync-pin";
 
 class Component extends DCLogic {
@@ -377,6 +381,7 @@ class Component extends DCLogic {
     anpQuery: "",
     anpFocused: false,
     anpSelected: null,
+    anpEditIdx: null,
     anpStatusSel: "pendiente",
     anpNotesVal: "",
     anpMsg: "",
@@ -571,15 +576,41 @@ class Component extends DCLogic {
       this.setState({ anpMsg: "Escribe o elige un ANP del catálogo." });
       return;
     }
-    const anps = [...this.state.anps, { name, cat, catLabel, status:this.state.anpStatusSel, notes:this.state.anpNotesVal.trim() }];
+    const entry = { name, cat, catLabel, status:this.state.anpStatusSel, notes:this.state.anpNotesVal.trim() };
+    let anps;
+    let msg;
+    if(this.state.anpEditIdx !== null){
+      anps = this.state.anps.map((a,i)=> i===this.state.anpEditIdx ? entry : a);
+      msg = "Cambios guardados.";
+    } else {
+      anps = [...this.state.anps, entry];
+      msg = "ANP registrada.";
+    }
     this.persist({ anps });
-    this.setState({ anpQuery:"", anpSelected:null, anpNotesVal:"", anpStatusSel:"pendiente", anpMsg:"ANP registrada." });
+    this.setState({ anpQuery:"", anpSelected:null, anpNotesVal:"", anpStatusSel:"pendiente", anpEditIdx:null, anpMsg:msg });
     setTimeout(()=>this.setState({ anpMsg:"" }), 2000);
+  };
+  editAnp = (e) => {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const a = this.state.anps[idx];
+    if(!a) return;
+    this.setState({
+      anpEditIdx: idx,
+      anpSelected: { name:a.name, cat:a.cat, catLabel:a.catLabel },
+      anpQuery: a.name,
+      anpStatusSel: a.status,
+      anpNotesVal: a.notes || "",
+      anpMsg: "Editando \"" + a.name + "\" — cambia estado/nota y da clic en Guardar cambios."
+    });
+  };
+  cancelEditAnp = () => {
+    this.setState({ anpEditIdx:null, anpQuery:"", anpSelected:null, anpNotesVal:"", anpStatusSel:"pendiente", anpMsg:"" });
   };
   removeAnp = (e) => {
     const idx = Number(e.currentTarget.dataset.idx);
     const anps = this.state.anps.filter((_,i)=>i!==idx);
     this.persist({ anps });
+    if(this.state.anpEditIdx === idx) this.cancelEditAnp();
   };
 
   setTaskTitle = (e) => this.setState({ taskTitle: e.target.value });
@@ -755,6 +786,9 @@ class Component extends DCLogic {
       clearSelection:this.clearSelection,
       anpStatusSel:s.anpStatusSel, setAnpStatusSel:this.setAnpStatusSel, anpNotesVal:s.anpNotesVal, setAnpNotesVal:this.setAnpNotesVal,
       addAnp:this.addAnp, anpMsg:s.anpMsg,
+      isEditingAnp: s.anpEditIdx !== null,
+      anpSubmitLabel: s.anpEditIdx !== null ? "Guardar cambios" : "Agregar ANP",
+      cancelEditAnp:this.cancelEditAnp, editAnp:this.editAnp,
       coveragePct, categoryChips, setCategoryFilter:this.setCategoryFilter,
       anpListEmpty: filteredAnps.length===0, filteredAnps, removeAnp:this.removeAnp,
       gridCells,
