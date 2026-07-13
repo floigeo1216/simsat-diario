@@ -1,0 +1,119 @@
+{
+  "phases": [
+    { "id": "piloto", "status": "completada", "notes": "Piloto Laguna de Términos (ANP00707116, EPSG:32615) funcionando de punta a punta: 7 clases digitalizadas (C8, C9, C22, C23, C280, C30, C32), pipeline GEE→PyQGIS→PostgreSQL/PostGIS→ArcGIS Online Experience Builder operativo. Ajusta a 'en proceso' si aún consideras cosas pendientes aquí." },
+    { "id": "validacion", "status": "activa", "notes": "v13 modular (9 archivos: CONFIG_TEMPLATE, CONFIG_LT, 01_aux–06_filters, MAIN_SIMSAT) depurado mayo–junio 2026. Revisión arquitectónica contra metodología MapBiomas identificó brechas (Gap Fill temporal, Mahalanobis, compuestos fenológicos). Presentación de validación de campo (10 slides) hecha para personal de Laguna de Términos. Acompañamiento técnico vía Copernicus AFOLU II Cluster, jul–dic 2026." },
+    { "id": "escalamiento", "status": "activa", "notes": "Backlog de módulo de carbono (07_carbon.js) definido: 7 Epics, sprints jul–dic 2026. Diseño: S1+S2 como sensores primarios, extensible a GEDI; regresión RF estratificada por clase SAMOF; conversión AGB×0.47×3.67; tabla PostGIS carbono_anp. En paralelo, coordinación de MapBiomas México Región 3 (subregiones 9, 10, 12, 13, 14, 15)." },
+    { "id": "cobertura", "status": "pendiente", "notes": "Aún sin réplica formal a las 232 ANP; depende de cerrar validación técnica y del módulo de carbono." }
+  ],
+  "tasks": [
+    {
+      "title": "Definir estructura modular de 07_carbon.js (S1+S2, extensible a GEDI)",
+      "phase": "escalamiento",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "progreso",
+      "notes": "Regresión RF estratificada por clase SAMOF; conversión AGB×0.47×3.67; salida a tabla PostGIS carbono_anp. Literatura clave: Day et al. 1987 (calibrado en Laguna de Términos), Kauffman et al. 2016 (Pantanos de Centla), Rojas-García et al. 2015 (ecuaciones alométricas México), GEDI L4A/L4B, ESA CCI Biomass v6.0.",
+      "anp": ""
+    },
+    {
+      "title": "Depurar exports del clasificador GEE v13",
+      "phase": "validacion",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "completada",
+      "notes": "Bugs resueltos: flag exportarCampos fuera de necesitaCampos; objeto aux no pasado en funciones de export; rutas hardcodeadas; evaluate() async dejando clasesDisponibles vacío; FeatureCollection().flatten() reemplazado por reduce()/merge(); clase dinámica C31 siempre verdadera rompía el clasificador.",
+      "anp": ""
+    },
+    {
+      "title": "Cerrar Gap Fill temporal y detección de outliers (Mahalanobis)",
+      "phase": "validacion",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "pendiente",
+      "notes": "Brecha identificada al comparar v13 contra la metodología de MapBiomas Brasil/México; falta compuestos fenológicos también.",
+      "anp": ""
+    },
+    {
+      "title": "Ejecutar pipeline MapBiomas Región 3 (scripts 2–6.2 + variante buffer)",
+      "phase": "escalamiento",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "progreso",
+      "notes": "Subregiones 9, 10, 12, 13, 14, 15. Downstream: gap fill, filtro temporal, filtro espacial, integración. Coordinación con JonathanVSV (Región 4) y Daniel; contexto heredado de MaryFlores (coordinadora anterior de Región 3).",
+      "anp": ""
+    },
+    {
+      "title": "Construir página de carbono en ArcGIS Online Experience Builder",
+      "phase": "escalamiento",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "pendiente",
+      "notes": "Seguir el mismo patrón que la página de Condiciones del Agua: filtro dinámico por ID_ANP vía Message Actions, widgets de texto con expresiones Arcade, gráficas mensual y anual.",
+      "anp": ""
+    },
+    {
+      "title": "Sesión tutorada Copernicus AFOLU II Cluster",
+      "phase": "validacion",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "progreso",
+      "notes": "Fase II presencial (SCRUM) ya realizada el 24–26 de junio 2026; sigue el acompañamiento tutorado jul–dic 2026 representando a FAO/CONANP.",
+      "anp": ""
+    },
+    {
+      "title": "Diseñar CONFIG por ANP para las siguientes áreas del escalamiento",
+      "phase": "escalamiento",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "pendiente",
+      "notes": "Decisión ya tomada de mantener CONFIG independiente por ANP (ver bitácora de decisiones); falta producir los archivos CONFIG_<ANP>.js para las siguientes ANP piloto extendido.",
+      "anp": ""
+    },
+    {
+      "title": "Redactar documentación técnica del módulo de agua (v1)",
+      "phase": "piloto",
+      "owner": "Florencio García",
+      "due": "",
+      "status": "completada",
+      "notes": "SIMANP_Documentacion_Agua_v1.docx generado. Cubre scripts GEE v1–v5, detección de cuerpos de agua Sentinel-1 con validación de consenso Sentinel-2, procesado para Laguna de Términos y Z.P.F.T.C.C. de los ríos Valle de Bravo.",
+      "anp": ""
+    }
+  ],
+  "decisions": [
+    {
+      "date": "",
+      "topic": "Arquitectura v13: CONFIG separado por ANP + ID_ANP consistente",
+      "text": "Se adopta un archivo CONFIG independiente por cada ANP (p. ej. CONFIG_TEMPLATE.js / CONFIG_LT.js) en vez de una única configuración global, y se establece el campo ID_ANP como identificador consistente en todos los módulos y como base del filtrado dinámico (Message Actions) en Experience Builder.",
+      "participants": "",
+      "anp": ""
+    },
+    {
+      "date": "",
+      "topic": "Campos de entrenamiento como GEE Assets",
+      "text": "Los polígonos de entrenamiento por clase se manejan como GEE Assets versionados por ANP, no como recursos embebidos en el script, para poder auditarlos y reutilizarlos entre módulos (cobertura, agua, futuro carbono).",
+      "participants": "",
+      "anp": ""
+    },
+    {
+      "date": "",
+      "topic": "Filtro orbital Sentinel-1: ASCENDING sobre DESCENDING",
+      "text": "Se adopta la órbita ASCENDING como estándar para la composición Sentinel-1 (getS1Composite, polarizaciones VV/VH) en el script de recolección de muestras de entrenamiento, tras comparar consistencia de resultados frente a DESCENDING.",
+      "participants": "",
+      "anp": ""
+    },
+    {
+      "date": "",
+      "topic": "Diseño del módulo de carbono (07_carbon.js)",
+      "text": "Se define Sentinel-1 y Sentinel-2 como sensores primarios para la estimación de biomasa aérea, con extensibilidad a GEDI (L4A/L4B) más adelante. Metodología: regresión Random Forest estratificada por clase SAMOF, conversión biomasa→carbono con el factor AGB×0.47×3.67, y almacenamiento en una tabla PostGIS dedicada (carbono_anp). Backlog formalizado en 7 Epics con sprints de julio a diciembre 2026, alineado a la tutoría del Copernicus AFOLU II Cluster.",
+      "participants": "",
+      "anp": ""
+    },
+    {
+      "date": "",
+      "topic": "MapBiomas Brasil como referencia arquitectónica",
+      "text": "Se toma la arquitectura y metodología de MapBiomas Brasil (y su implementación en MapBiomas México) como referencia principal para el diseño de SIMSAT-ANP, en vez de construir una metodología de clasificación completamente propia desde cero.",
+      "participants": "",
+      "anp": ""
+    }
+  ]
+}

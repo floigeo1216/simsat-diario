@@ -191,3 +191,34 @@ esto se vuelve una herramienta multiusuario — para eso sí valdría la pena
 migrar a Supabase Auth (email+contraseña o magic link) con RLS basada en
 `auth.uid()`.
 
+## Corrección: editar una ANP ya registrada
+
+Antes, una vez guardada una ANP en "Cobertura ANP" no había forma de
+cambiar su estado (p. ej. de "En proceso" a "Integrada") sin borrarla y
+volver a capturarla. Ahora cada fila tiene un botón **Editar** que carga
+esa ANP de vuelta al formulario; al dar clic en **Guardar cambios** se
+actualiza esa misma fila en vez de crear una duplicada. **Cancelar**
+regresa el formulario a modo "agregar nueva" sin tocar nada.
+
+## Precargar tareas y decisiones reales
+
+Este repo incluye `precarga-tareas-decisiones.json` con 8 tareas, 5
+decisiones y el estado de las 4 fases, basado en el trabajo real de
+SIMSAT-ANP, MapBiomas Región 3 y el Copernicus AFOLU II Cluster.
+
+**Importante — esto reemplaza, no combina:** al importar un respaldo, la
+app reemplaza por completo las listas de `phases`, `tasks` y `decisions`
+que ya tengas capturadas (no las mezcla una por una). El archivo NO
+incluye la clave `anps`, así que tus ANP ya registradas **no se tocan**.
+Si ya tienes tareas o decisiones capturadas que quieres conservar, exporta
+primero un respaldo tuyo ("Exportar respaldo") antes de importar este, y
+combina ambos archivos a mano si hace falta.
+
+Para usarlo:
+1. Abre la app → botón **Importar respaldo** (junto a "Exportar respaldo").
+2. Selecciona `precarga-tareas-decisiones.json`.
+3. Revisa las fechas límite de las tareas (se dejaron vacías a propósito)
+   y las fechas de las decisiones (igual, para que pongas la fecha real
+   si la recuerdas) y ajusta el estado de las fases si no refleja tu
+   situación actual.
+

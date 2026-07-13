@@ -44,6 +44,7 @@
     <button type="button" onClick="{{ goCobertura }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleCobertura }}">Cobertura ANP</button>
     <button type="button" onClick="{{ goTareas }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleTareas }}">Tareas</button>
     <button type="button" onClick="{{ goDecisiones }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleDecisiones }}">Bitácora de decisiones</button>
+    <button type="button" onClick="{{ goHistorialAnp }}" style="font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:9px 16px;cursor:pointer;{{ tabStyleHistorialAnp }}">Historial ANP</button>
     <button type="button" onClick="{{ exportBackup }}" style="padding:9px 14px;border:1.5px solid #565b4d;background:transparent;color:#242a20;font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;box-shadow:none;">Exportar respaldo</button>
     <label style="padding:9px 14px;border:1.5px solid #565b4d;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;">
       Importar respaldo
@@ -340,6 +341,65 @@
     </div>
   </sc-if>
 
+  <!-- HISTORIAL ANP -->
+  <sc-if value="{{ isHistorialAnp }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="background:#f1ede1;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:22px;margin-bottom:20px;">
+        <h2 style="font-family:'Special Elite', monospace;font-size:18px;margin:0 0 4px;">Historial por ANP</h2>
+        <p style="color:#565b4d;font-size:13px;margin:0 0 16px;">Elige una ANP para ver su línea de tiempo: cambios de estado y notas se registran solos; tú puedes agregar entradas propias.</p>
+        <sc-if value="{{ hasAnpsForHistory }}" hint-placeholder-val="{{ true }}">
+          <select value="{{ historyAnpIdxSel }}" onChange="{{ selectHistoryAnp }}" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:9px 6px;font-family:'Source Sans 3', sans-serif;font-size:14.5px;color:#242a20;">
+            <option value="">— Selecciona una ANP registrada —</option>
+            <sc-for list="{{ historyAnpOptions }}" as="ho" hint-placeholder-count="0">
+              <option value="{{ ho.rawIdx }}">{{ ho.name }}</option>
+            </sc-for>
+          </select>
+        </sc-if>
+        <sc-if value="{{ hasAnpsForHistory }}" hint-placeholder-val="{{ false }}">
+          <p style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#565b4d;">Aún no tienes ninguna ANP registrada en "Cobertura ANP" — registra una primero para poder ver su historial.</p>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ hasHistorySelection }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1.5px solid #242a20;background:#e7e2d1;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:'Special Elite', monospace;font-size:16px;">{{ selectedHistoryAnpName }}</div>
+            <div style="font-size:12px;color:#565b4d;">{{ selectedHistoryAnpCatLabel }}</div>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;padding:5px 10px;border:1.5px solid {{ selectedHistoryAnpStatusColor }};color:{{ selectedHistoryAnpStatusColor }};">{{ selectedHistoryAnpStatus }}</span>
+        </div>
+
+        <div style="background:#f1ede1;border:2px solid #242a20;box-shadow:2px 3px 0 rgba(36,42,32,0.18);padding:18px 20px;margin-bottom:18px;">
+          <label style="display:block;font-family:'JetBrains Mono', monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#565b4d;margin-bottom:5px;">Agregar entrada manual</label>
+          <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;margin-bottom:10px;">
+            <textarea value="{{ historyEntryText }}" onChange="{{ setHistoryEntryText }}" placeholder="Ej. Hoy se validó en campo la clase C22 con personal de la ANP" style="width:100%;border:1.5px dotted #565b4d;background:transparent;padding:8px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;min-height:44px;resize:vertical;box-sizing:border-box;"></textarea>
+            <input type="date" value="{{ historyEntryDate }}" onChange="{{ setHistoryEntryDate }}" style="border:none;border-bottom:1.5px dotted #565b4d;background:transparent;padding:7px 2px;font-family:'Source Sans 3', sans-serif;font-size:14px;color:#242a20;height:fit-content;"/>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button type="button" onClick="{{ addHistoryEntry }}" style="font-family:'JetBrains Mono', monospace;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:9px 16px;border:2px solid #242a20;background:#3c5940;color:#fff;cursor:pointer;box-shadow:2px 2px 0 rgba(36,42,32,0.25);">Agregar al historial</button>
+          </div>
+        </div>
+
+        <sc-if value="{{ historyEmptyList }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:32px 16px;color:#565b4d;font-family:'JetBrains Mono',monospace;font-size:12.5px;border:1.5px dashed #c7c0aa;">Todavía no hay entradas en el historial de esta ANP.</div>
+        </sc-if>
+        <div style="position:relative;padding-left:18px;border-left:2px solid #c7c0aa;">
+          <sc-for list="{{ historyEntries }}" as="h" hint-placeholder-count="0">
+            <div style="position:relative;margin-bottom:14px;">
+              <div style="border:1.5px solid #242a20;background:#e7e2d1;padding:11px 14px;">
+                <div style="display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#565b4d;margin-bottom:5px;">
+                  <span>{{ h.fechaLabel }} · {{ h.tipo }}</span>
+                  <button type="button" onClick="{{ removeHistoryEntry }}" data-idx="{{ h.rawIdx }}" data-hid="{{ h.id }}" style="background:none;border:none;box-shadow:none;color:#a24a3a;font-family:'JetBrains Mono',monospace;font-size:10.5px;cursor:pointer;padding:2px;text-transform:uppercase;">Eliminar</button>
+                </div>
+                <p style="font-size:13.5px;line-height:1.5;margin:0;white-space:pre-wrap;">{{ h.texto }}</p>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
 </div>
 </div>
 
@@ -360,9 +420,11 @@ const TASK_FILTERS = ["Todas","pendiente","progreso","bloqueada","completada"];
 
 function escapeText(s){ return s || ""; }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
 function normalizeStr(s){
   return (s || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
+const STATUS_LABELS = { pendiente:"Pendiente", proceso:"En proceso", integrada:"Integrada" };
 
 // --- Sincronización (Supabase) ---
 // Reemplaza estos dos valores con los de tu proyecto:
@@ -396,6 +458,9 @@ class Component extends DCLogic {
     decisions: [],
     decDate: todayStr(), decTopic:"", decText:"", decPart:"", decAnp:"",
     decMsg: "",
+    historyAnpIdx: null,
+    historyEntryText: "",
+    historyEntryDate: todayStr(),
     lastSaved: null,
     syncPin: "",
     syncPinInput: "",
@@ -580,13 +645,26 @@ class Component extends DCLogic {
       this.setState({ anpMsg: "Escribe o elige un ANP del catálogo." });
       return;
     }
-    const entry = { name, cat, catLabel, status:this.state.anpStatusSel, notes:this.state.anpNotesVal.trim() };
+    const now = new Date().toISOString();
+    const status = this.state.anpStatusSel;
+    const notes = this.state.anpNotesVal.trim();
     let anps;
     let msg;
     if(this.state.anpEditIdx !== null){
+      const prev = this.state.anps[this.state.anpEditIdx] || {};
+      const historial = Array.isArray(prev.historial) ? [...prev.historial] : [];
+      if(prev.status !== status){
+        historial.push({ id:uid(), fecha:now, tipo:"auto", texto:`Estado cambiado de "${STATUS_LABELS[prev.status]||prev.status}" a "${STATUS_LABELS[status]||status}".` });
+      }
+      if((prev.notes||"") !== notes && notes){
+        historial.push({ id:uid(), fecha:now, tipo:"auto", texto:`Nota actualizada: "${notes}"` });
+      }
+      const entry = { name, cat, catLabel, status, notes, historial };
       anps = this.state.anps.map((a,i)=> i===this.state.anpEditIdx ? entry : a);
       msg = "Cambios guardados.";
     } else {
+      const historial = [{ id:uid(), fecha:now, tipo:"auto", texto:`ANP registrada con estado "${STATUS_LABELS[status]||status}".` }];
+      const entry = { name, cat, catLabel, status, notes, historial };
       anps = [...this.state.anps, entry];
       msg = "ANP registrada.";
     }
@@ -615,6 +693,41 @@ class Component extends DCLogic {
     const anps = this.state.anps.filter((_,i)=>i!==idx);
     this.persist({ anps });
     if(this.state.anpEditIdx === idx) this.cancelEditAnp();
+    if(this.state.historyAnpIdx === idx) this.setState({ historyAnpIdx:null });
+  };
+
+  goHistorialAnp = () => this.setState({ view:"historialAnp" });
+  selectHistoryAnp = (e) => {
+    const v = e.target.value;
+    this.setState({ historyAnpIdx: v==="" ? null : Number(v), historyEntryText:"", historyEntryDate: todayStr() });
+  };
+  setHistoryEntryText = (e) => this.setState({ historyEntryText: e.target.value });
+  setHistoryEntryDate = (e) => this.setState({ historyEntryDate: e.target.value });
+  addHistoryEntry = () => {
+    const idx = this.state.historyAnpIdx;
+    if(idx===null || !this.state.anps[idx]) return;
+    const text = this.state.historyEntryText.trim();
+    if(!text){ this.setState({ anpMsg:"" }); return; }
+    const entry = { id:uid(), fecha: (this.state.historyEntryDate||todayStr())+"T12:00:00.000Z", tipo:"manual", texto:text };
+    const anps = this.state.anps.map((a,i)=>{
+      if(i!==idx) return a;
+      const historial = Array.isArray(a.historial) ? [...a.historial, entry] : [entry];
+      return { ...a, historial };
+    });
+    this.persist({ anps });
+    this.setState({ historyEntryText:"" });
+  };
+  removeHistoryEntry = (e) => {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const hid = e.currentTarget.dataset.hid;
+    const a = this.state.anps[idx];
+    if(!a) return;
+    if(!confirm(`¿Eliminar esta entrada del historial de "${a.name}"? No se puede deshacer.`)) return;
+    const anps = this.state.anps.map((x,i)=>{
+      if(i!==idx) return x;
+      return { ...x, historial:(x.historial||[]).filter(h=>h.id!==hid) };
+    });
+    this.persist({ anps });
   };
 
   setTaskTitle = (e) => this.setState({ taskTitle: e.target.value });
@@ -718,6 +831,7 @@ class Component extends DCLogic {
     const isCobertura = s.view === "cobertura";
     const isTareas = s.view === "tareas";
     const isDecisiones = s.view === "decisiones";
+    const isHistorialAnp = s.view === "historialAnp";
 
     const activeStyle = "background:#242a20;color:#e7e2d1;border:1.5px solid #242a20;";
     const inactiveStyle = "background:#f1ede1;border:1.5px solid #565b4d;color:#565b4d;";
@@ -791,13 +905,38 @@ class Component extends DCLogic {
       return { ...d, rawIdx, hasAnp: !!d.anp, hasPart: !!d.participants };
     });
 
+    const historyAnpOptions = s.anps.map((a,i)=>({ rawIdx:i, name:a.name }));
+    const hasAnpsForHistory = s.anps.length > 0;
+    const historyAnpIdxNum = s.historyAnpIdx;
+    const selectedHistoryAnp = (historyAnpIdxNum!==null && s.anps[historyAnpIdxNum]) ? s.anps[historyAnpIdxNum] : null;
+    const hasHistorySelection = !!selectedHistoryAnp;
+    const historyEntries = selectedHistoryAnp
+      ? (selectedHistoryAnp.historial||[]).slice().reverse().map(h=>({
+          ...h, rawIdx: historyAnpIdxNum,
+          fechaLabel: (h.fecha||"").slice(0,10),
+          isManual: h.tipo==="manual"
+        }))
+      : [];
+    const historyEmptyList = hasHistorySelection && historyEntries.length===0;
+
     return {
-      isFases, isCobertura, isTareas, isDecisiones,
+      isFases, isCobertura, isTareas, isDecisiones, isHistorialAnp,
       tabStyleFases: isFases?activeStyle:inactiveStyle,
       tabStyleCobertura: isCobertura?activeStyle:inactiveStyle,
       tabStyleTareas: isTareas?activeStyle:inactiveStyle,
       tabStyleDecisiones: isDecisiones?activeStyle:inactiveStyle,
-      goFases:this.goFases, goCobertura:this.goCobertura, goTareas:this.goTareas, goDecisiones:this.goDecisiones,
+      tabStyleHistorialAnp: isHistorialAnp?activeStyle:inactiveStyle,
+      goFases:this.goFases, goCobertura:this.goCobertura, goTareas:this.goTareas, goDecisiones:this.goDecisiones, goHistorialAnp:this.goHistorialAnp,
+      historyAnpOptions, hasAnpsForHistory, hasHistorySelection, historyAnpIdxSel: historyAnpIdxNum===null? "" : historyAnpIdxNum,
+      selectedHistoryAnpName: selectedHistoryAnp ? selectedHistoryAnp.name : "",
+      selectedHistoryAnpStatus: selectedHistoryAnp ? (STATUS_LABELS[selectedHistoryAnp.status]||selectedHistoryAnp.status) : "",
+      selectedHistoryAnpStatusColor: selectedHistoryAnp ? (STATUS_COLORS_ANP[selectedHistoryAnp.status]||"#565b4d") : "#565b4d",
+      selectedHistoryAnpCatLabel: selectedHistoryAnp ? selectedHistoryAnp.catLabel : "",
+      selectHistoryAnp:this.selectHistoryAnp,
+      historyEntryText: s.historyEntryText, setHistoryEntryText:this.setHistoryEntryText,
+      historyEntryDate: s.historyEntryDate, setHistoryEntryDate:this.setHistoryEntryDate,
+      addHistoryEntry:this.addHistoryEntry, removeHistoryEntry:this.removeHistoryEntry,
+      historyEntries, historyEmptyList,
       exportBackup:this.exportBackup, importBackup:this.importBackup,
       coverageLabel: integradaCount+"/"+TOTAL_ANP,
       activePhaseName: activePhase ? activePhase.name : "—",
